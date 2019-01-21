@@ -15,6 +15,21 @@ export class TokenInterceptor implements HttpInterceptor {
                 Authorization: `Bearer ${this.auth.getToken()}`
             }
         });
+
         return next.handle(request);
+
+        /* This one for manipulating Error response */
+
+       /* return next.handle(req).do((event: HttpEvent<any>) => {
+            if (event instanceof HttpResponse) {
+                // do stuff with response if you want
+            }
+        }, (err: any) => {
+            if (err instanceof HttpErrorResponse) {
+                if (err.status === 401) {
+                    this.auth.collectFailedRequest(request);
+                }
+            }
+        });*/
     }
 }
