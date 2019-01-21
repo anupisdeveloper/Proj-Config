@@ -33,3 +33,17 @@ export class TokenInterceptor implements HttpInterceptor {
         });*/
     }
 }
+
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+@NgModule({
+    bootstrap: [AppComponent],
+    imports: [],
+    providers: [
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: TokenInterceptor,
+            multi: true
+        }
+    ]
+})
+export class AppModule {}
