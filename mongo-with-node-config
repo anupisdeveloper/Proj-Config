@@ -1,0 +1,33 @@
+// importing mongoClient to connect at mongodb
+const MongoClient = require('mongodb').MongoClient;
+const url = 'mongodb+srv://<user>:<password>@<host>/<DB_name>?retryWrites=true';
+
+const mongoConfig = {};
+
+// Create the database connection
+MongoClient.connect(url, {  
+  poolSize: 10,
+  useNewUrlParser: true
+  // other options can go here
+},function(err, db) {
+    if(db){
+	console.log('This is printing in if block');	
+	console.log(db);
+    mongoConfig.mongodb = db;
+    } else {
+		mongoConfig.mongodb =  null;
+		console.log(err);
+	}
+});
+
+mongoConfig.executeSqlQuer = function(query, data, callback) {
+	mongoConfig.mongodb.runSQLQuery(query || 'SELECT * FROM student', (err, res) => {
+		if(res){
+			callback(null, res);
+		} else {
+			callback(err, null);
+		}
+	});
+}
+
+module.exports = mongoConfig;
