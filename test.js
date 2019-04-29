@@ -1,64 +1,75 @@
 const fs = require('fs');
-const { Parser } = require('json2csv');
-const csv2 = require('csvtojson/v2')
-var csvWriter = require('csv-write-stream');
-const json2csv = require('json2csv').parse;
+const {Parser} = require('json2csv');
+const csv2 = require('csvtojson/v2');
 
-const createCsvWriter = require('csv-writer').createObjectCsvWriter;  
+/* Provide the path of csv file */
+const csvFilePathUrl = 'node_test.csv';
 
-{
-	 "csv-parser": "^2.2.0",
-    "csv-write-stream": "^2.0.0",
-    "csv-writer": "^1.3.0",
-    "csvtojson": "^2.0.8",
-    "express": "^4.16.4",
-    "json2csv": "^4.5.0",
-    "jsonexport": "^2.4.1"
+/* This function will remove header of csv and return new csv */
+function removeCsvHeader(headers, csv) {
+    let headerStr = "";
+    headers.forEach((header) => {
+        headerStr = headerStr + '"' + header + '"' + ','
+    });
+    return csv.replace(headerStr.slice(0, -1), '');
 }
 
-function createCSV(name, data) {
-	console.log('name = ' + name);
-	console.log(data);
+/* This function will create new csv file is not exists and if exits will append new row*/
+function createCSV(name, data, callback) {
 
-	const columns = ['Column B','Cloumn C'];
-	const json2csvParser = new Parser({columns});
-	const csv = json2csvParser.parse(data);
-	console.log()
-	console.log(csv);
-	
-//var writer = csvWriter();
-//writer.pipe(fs.createWriteStream(name + '.csv'))
-//writer.write(data)
-//writer.end()
+    const json2csvParser = new Parser();
+    const csv = json2csvParser.parse(data);
 
-fs.stat(name + '.csv', (err, resp) => {
-    if(err) {
-		console.log('file creates');
-		console.log(err);
-        fs.writeFileSync(name + '.csv', csv);
+    const isPresent = fs.existsSync(name);
+
+    if (!isPresent) {
+        fs.writeFile(name, csv, (err, res) => {
+            if (!err) {
+                console.log('New file created...');
+                callback(null, true);
+            }
+        });
     } else {
-		console.log('file apending');
-		fs.appendFile(name + '.csv', csv.replace('"Column B","Column C"',''), (err, resp) => {
-        if(err) reject(err);
-        else resolve();
-    });
-	}
-});
-
+        const csvWithoutHeader = removeCsvHeader(Object.keys(data), csv);
+        fs.appendFile(name, csvWithoutHeader, (err, res) => {
+            if (!err) {
+                console.log('File already available so data apended');
+                callback(null, true);
+            }
+        });
+    }
 }
 
 function getCsvData(keys, csvRow) {
-	const data = JSON.parse(JSON.stringify(csvRow));
-	delete data[keys[0]];
-	return data;
+    const data = JSON.parse(JSON.stringify(csvRow));
+    delete data[keys[0]];
+    return data;
 }
 
-csv2().fromFile('node_test.csv').then((jsonObj)=>{
-	//console.log(jsonObj);
-	jsonObj.forEach((csvRow) => {
-		let keys = Object.keys(csvRow);
-		//console.log('printing inside parser...');
-		console.log(getCsvData(keys, csvRow));
-		createCSV(csvRow[keys[0]], getCsvData(keys, csvRow));
-	});
+/* This function will call recursively for creating and appending data to csv till csvRows length*/
+function start(index, csvRows) {
+    let item = csvRows[index];
+    let keys = Object.keys(item);
+    let fileName = item[keys[0]] + '.csv';
+
+    createCSV(fileName, getCsvData(keys, item), (err, res) => {
+        index += 1;
+        if (res && index < csvRows.length) {
+            start(index, csvRows);
+        } else if (err) {
+            console.log('error while creating file or writing the file.');
+            console.log(err);
+        }
+    });
+}
+
+
+
+/* This function will read the csv file and return json */
+csv2().fromFile(csvFilePathUrl).then((jsonObj) => {
+    let index = 0;
+    start(index, jsonObj);
+}, (error) => {
+    console.log('Please Provide the valid csv file path');
+   // console.log(err);
 });
