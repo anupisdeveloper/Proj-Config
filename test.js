@@ -6,6 +6,16 @@ const json2csv = require('json2csv').parse;
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;  
 
+{
+	 "csv-parser": "^2.2.0",
+    "csv-write-stream": "^2.0.0",
+    "csv-writer": "^1.3.0",
+    "csvtojson": "^2.0.8",
+    "express": "^4.16.4",
+    "json2csv": "^4.5.0",
+    "jsonexport": "^2.4.1"
+}
+
 function createCSV(name, data) {
 	console.log('name = ' + name);
 	console.log(data);
